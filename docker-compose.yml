@@ -1,0 +1,44 @@
+
+services:
+  nginx-gateway:
+    image: nginx:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - user-service
+      - order-service
+    restart: unless-stopped
+
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command:
+      - server
+      - /data
+      - --console-address
+      - ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+
+volumes:
+  minio_data:
